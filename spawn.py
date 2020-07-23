@@ -2,7 +2,6 @@ import subprocess
 import sys
 import subprocess, os
 import time 
-from config import *
 import random
 
 bucket_name = sys.argv[1]
