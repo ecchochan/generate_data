@@ -137,6 +137,7 @@ def split_doc(doc, length_limit = 10000):
             accum = 0
             if buc:
                 bucket_lines.append('\n'.join(buc))
+                buc = []
 
     if buc:
         bucket_lines.append('\n'.join(buc))
@@ -245,7 +246,7 @@ def worker(item):
             break
 
 
-    if(np.count_nonzero(ids) <= 15) or np.count_nonzero(np.array(ids) < 7) > 5:
+    if(np.count_nonzero(ids) <= 15) or np.count_nonzero(np.array(ids) < 7) > max(ids.size // 100,3):
         return
         
 
