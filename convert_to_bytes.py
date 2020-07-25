@@ -10,6 +10,58 @@ def upload_data_to_gcs(data, target_key):
     return bucket.blob(target_key).public_url
 
 
+
+
+
+
+
+
+import sys
+bucket_name = sys.argv[1]
+fn = sys.argv[2]
+blob = list(client.list_blobs(bucket_name, prefix=fn))[0]
+
+
+data = blob.download_as_string()
+
+
+if not data:
+    import sys
+    print('exiting')
+    sys.exit()
+
+
+
+
+
+
+#####################################################
+##                                                 ##
+##   Below is the work to be done for one job      ##
+##   The script should save the work accordingly   ##
+##   and then exit normally                        ##
+##                                                 ##
+#####################################################
+
+
+# ... work ...
+
+# _fn = slugify(fn)
+
+# upload_data_to_gcs(final_data, "masked_data/data_labels_%s"%_fn)
+
+
+
+
+
+
+
+
+
+
+
+
+
 import numpy as np
 import random
 
@@ -236,26 +288,8 @@ def worker(item):
 
     return ids_flat_chunks.tobytes(), labels_flat_chunks.tobytes(), masked_ids_flat_chunks.tobytes()
 
-from joblib import Parallel, delayed
+
 from time import sleep
-def fetch(blob):
-    return blob.download_as_string()
-
-
-import sys
-bucket_name = sys.argv[1]
-fn = sys.argv[2]
-blob = list(client.list_blobs(bucket_name, prefix=fn))[0]
-
-
-data = blob.download_as_string()
-
-
-if not data:
-    import sys
-    print('exiting')
-    sys.exit()
-
 
 t0 = time.time()
 flat_data = []
