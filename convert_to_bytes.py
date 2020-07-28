@@ -55,13 +55,6 @@ if not data:
 
 
 
-
-
-
-
-
-
-
 import numpy as np
 import random
 
@@ -77,6 +70,8 @@ jieba.load_userdict('dict.txt.big')
 jieba.add_word('<nl>')
 c = requests.get('https://gist.githubusercontent.com/ecchochan/23613d281f5bbeab97a6a5b9318e902a/raw/91f6496dd1c71b7398dcfd4915f1113c40f0ac22/jieba_hk.py')
 
+UNK_TOKEN = 4
+MASK_TOKEN = 5
 
 
 
@@ -237,16 +232,16 @@ def worker(item):
             labels[start_index:end_index+1] = ids[start_index:end_index+1]
             p = random.random()
             if p <=0.1:
-                masked_ids[start_index:end_index+1] = np.random.randint(6,50000,size = end_index - start_index + 1)
+                masked_ids[start_index:end_index+1] = np.random.randint(6,vocab_size,size = end_index - start_index + 1)
             elif p <=0.9:
-                masked_ids[start_index:end_index+1] = 4
+                masked_ids[start_index:end_index+1] = MASK_TOKEN
             else:
                 masked_ids[start_index:end_index+1] = ids[start_index:end_index+1]
         if masked_words > mask_no:
             break
 
 
-    if(np.count_nonzero(ids) <= 15) or np.count_nonzero(np.array(ids) < 7) > max(ids.size // 100,3):
+    if(np.count_nonzero(ids) <= 15) or np.count_nonzero(np.array(ids) == UNK_TOKEN) > max(ids.size // 100,3):
         return
         
 
@@ -309,16 +304,13 @@ sleep(0.4)
 t0 = time.time()
 
 
-def get_encoded():
-    import tokenizers
-    from transformers import BertTokenizer
-    from cantokenizer import CanTokenizer
-    seq_length = 512
-    tokenizer = CanTokenizer(vocab_file = 'cantokenizer-vocab.txt')
-    encoded = tokenizer.encode_batch(data)
-    return encoded
-encoded = get_encoded()
-
+import tokenizers
+from transformers import BertTokenizer
+from cantokenizer import CanTokenizer
+seq_length = 512
+tokenizer = CanTokenizer(vocab_file = 'cantokenizer-vocab.txt')
+encoded = tokenizer.encode_batch(data)
+vocab_size = tokenizer._tokenizer.get_vocab_size()
 t1 = time.time()
 print(f"finish tokenizing file {blob.name}, %.4f"%(t1-t0))
 
@@ -373,8 +365,8 @@ _fn = slugify(fn)
 
 t0 = time.time()
 upload_data_to_gcs(b''.join(buffer_ids),"masked_data/data_original_%s"%_fn)
-upload_data_to_gcs(b''.join(buffer_labels),"masked_data/data_masked_%s"%_fn)
-upload_data_to_gcs(b''.join(buffer_masked_ids),"masked_data/data_labels_%s"%_fn)
+upload_data_to_gcs(b''.join(buffer_masked_ids),"masked_data/data_masked_%s"%_fn)
+upload_data_to_gcs(b''.join(buffer_labels),"masked_data/data_labels_%s"%_fn)
 
 
 t1 = time.time()
