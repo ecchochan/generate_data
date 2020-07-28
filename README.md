@@ -32,6 +32,8 @@ Suppose we want to run script in N machines in Google Cloud
    - Libraries (e.g. Huggingface tokenizers)
    - Scripts to be ran for each VM (e.g. spawn.py, generate.py)
 
+   and create an image for this VM
+
 2. Prepare the data to be processed in Google Bucket<br/>
    e.g. `gs://<bucket-name>/data`
 
@@ -40,13 +42,10 @@ Suppose we want to run script in N machines in Google Cloud
 ```bash
 BUCKET_NAME=<bucket-name>
 REPO_NAME=generate_data
-CODE_PATH=/path/to/codes/$REPO_NAME
+CODE_PATH=/path/to/local/codes/$REPO_NAME
 
 gsutil rsync -x '\.git.*' $CODE_PATH gs://$BUCKET_NAME/gits/$REPO_NAME
 ```
-
-
-4. Create an image of the above VM
 
 5. Create an instance template
    - Configure the hardware (e.g. # of cores)
