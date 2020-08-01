@@ -14,7 +14,7 @@ This repo contains an example for creating Chinese X English ELECTRA training da
 - [x] **Spin up VMs automatically** - use Google Instance Template to spawn worker VMs
 - [x] **No racing issue** - fetch/save data to Google Bucket 
 - [x]  **Easy to update scripts** - Update scripts by uploading to Google Bucket without the need to recreate images
-- [] **Auto deletion of VMs to avoid extra charge** - Close the VM after finsing the jobs
+- [ ] **Auto deletion of VMs to avoid extra charge** - Close the VM after finsing the jobs
 
 
 ### **Structure**
