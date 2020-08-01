@@ -1,4 +1,4 @@
-## Distributed Pre-training Data Pre-processing
+## Distributed Pre-training Data Pre-processing 🐢 + 💰 = 🐢💨💨
 
 ### **Purpose**
 
@@ -6,15 +6,15 @@ This is an attempt to distrubte heavy workload across multiple Google VMs throug
 
 This is useful for large-scale data processing, e.g. NLP corpus pre-processing.
 
-This repo contains an example for creating Chinese ELECTRA training data. 
+This repo contains an example for creating Chinese X English ELECTRA training data. 
 
 
 
 ### **Features**
-- **Spin up VMs automatically** - use Google Instance Template to 
-- **No racing issue** - fetch/save data to Google Bucket 
-- **Easy to update scripts** - Update scripts by uploading to Google Bucket without the need to recreate images
-
+- [x] **Spin up VMs automatically** - use Google Instance Template to spawn worker VMs
+- [x] **No racing issue** - fetch/save data to Google Bucket 
+- [x]  **Easy to update scripts** - Update scripts by uploading to Google Bucket without the need to recreate images
+- [] **Auto deletion of VMs to avoid extra charge** - Close the VM after finsing the jobs
 
 
 ### **Structure**
@@ -83,12 +83,15 @@ cd $ROOT
 touch $LOG_PATH
 chmod 777 $LOG_PATH
 
+COMMAND=${COMMAND//\"/\\\"}
 run="echo \"run\" >> $LOG_PATH && \
 cd $ROOT &>> $LOG_PATH && \
 sleep 2 && \
 cd $REPO &>> $LOG_PATH && \
-$COMMAND &>> $LOG_PATH && \
-shutdown now"
+$COMMAND &>> $LOG_PATH; \
+export NAME=\$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google') && \
+export ZONE=\$(curl -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google') && \
+gcloud --quiet compute instances delete \\\$NAME --zone=\\\$ZONE"
 
 run=${run//\"/\\\"}
 

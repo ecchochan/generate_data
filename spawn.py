@@ -1,8 +1,10 @@
 import subprocess
 import sys
-import subprocess, os
+import os
 import time 
 import random
+subprocess.run([sys.executable, "-m", "pip","install","cython"])
+subprocess.run([sys.executable, "cythonize.py"])
 
 from google.cloud import storage
 
@@ -38,7 +40,7 @@ bucket_name = sys.argv[1]
 ##                                         ##
 #############################################
 
-masked = list(client.list_blobs(bucket_name, prefix='masked_data/data_'))
+masked = list(client.list_blobs(bucket_name, prefix='masked_data2/data_'))
 masked = [m.name for m in masked]
 
 
@@ -50,23 +52,9 @@ masked = [m.name for m in masked]
 ###########################################
 
 blobs = []
-for blob in client.list_blobs(bucket_name, prefix='public_model/corpus/'):
+for blob in client.list_blobs(bucket_name, prefix='public_model/corpus_only/'):
     if(blob.name.endswith('.txt')):
         blobs.append(blob)
-
-
-       
-
-###############################
-##                           ##
-##   My hardcoded cleaning   ##
-##                           ##
-###############################
-
-indices = [i for i in range(1086,1099)]
-data_filter = [195, 193, 159, 141, 200, 204, 218, 225, 226, 457, 458, 465, 511, 517, 665, 768, 769, 800, 948, 964]
-data_filter.extend(indices)
-blobs = [j for i, j in enumerate(blobs) if i not in data_filter]
 
 
 
@@ -95,7 +83,7 @@ for blob in blobs:
         ##                                 ##
         #####################################
 
-        upload_data_to_gcs("0", "masked_data_working/%s"%_fn, if_generation_match=0) 
+        upload_data_to_gcs("0", "masked_data2_working/%s"%_fn, if_generation_match=0) 
         # ensure just one worker do the job at the same time.
 
     except:
@@ -107,9 +95,9 @@ for blob in blobs:
     ##                                                   ##
     #######################################################
 
-    if ("masked_data/data_original_%s"%_fn in masked and 
-        "masked_data/data_masked_%s"%_fn in masked and 
-        "masked_data/data_labels_%s"%_fn in masked
+    if ("masked_data2/data_original_%s"%_fn in masked and 
+        "masked_data2/data_masked_%s"%_fn in masked and 
+        "masked_data2/data_labels_%s"%_fn in masked
        ):
         continue
         

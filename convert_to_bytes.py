@@ -12,7 +12,7 @@ def upload_data_to_gcs(data, target_key):
 
 
 
-
+from data_utils import too_many_repeat
 
 
 
@@ -69,6 +69,12 @@ with open('dict.txt.big' , 'w') as f:
 jieba.load_userdict('dict.txt.big')
 jieba.add_word('<nl>')
 c = requests.get('https://gist.githubusercontent.com/ecchochan/23613d281f5bbeab97a6a5b9318e902a/raw/91f6496dd1c71b7398dcfd4915f1113c40f0ac22/jieba_hk.py')
+jieba_hk = {}
+exec(c.text, jieba_hk)
+for e in jieba_hk['chengyu']:
+    jieba.add_word(e)
+for e in jieba_hk['hk_words']:
+    jieba.add_word(e)
 
 UNK_TOKEN = 4
 MASK_TOKEN = 5
@@ -112,8 +118,8 @@ def iterator_gen(generator, handler=None, parallel = False, chunksize =128):
 
 import math
 import collections
-def weigthed_shuffle(items, weights, mask_no):
-    order = sorted(range(len(items)), key=lambda i: -random.random() ** (1.0 / weights[i]))[:mask_no]
+def weigthed_shuffle(items, weights):
+    order = sorted(range(len(items)), key=lambda i: -random.random() ** (1.0 / weights[i]))
     return [items[i] for i in order]
 
 
@@ -216,7 +222,7 @@ def worker(item):
 
 
     mask_no = int(round((len(encoding_ids) - (np.array(encoding_ids)<=5).sum()).item()*0.15))
-    sample = weigthed_shuffle(pickables, weights, mask_no)
+    sample = weigthed_shuffle(pickables, weights)
 
     for toks in sample:
         toks.sort()
@@ -231,6 +237,21 @@ def worker(item):
             masked_words += end_index - start_index + 1
             labels[start_index:end_index+1] = ids[start_index:end_index+1]
             p = random.random()
+            faul_prob = 0
+            if (start_index > 0 and masked_ids[start_index-1] == MASK_TOKEN):
+                faul_prob += 0.5
+            if (end_index < masked_ids.size-1 and masked_ids[end_index+1] == MASK_TOKEN):
+                faul_prob += 0.5
+            if (start_index > 1 and masked_ids[start_index-2] == MASK_TOKEN):
+                faul_prob += 0.25
+            if (end_index < masked_ids.size-2 and masked_ids[end_index+2] == MASK_TOKEN):
+                faul_prob += 0.25
+
+            if random.random() < faul_prob:
+                continue
+
+
+
             if p <=0.1:
                 masked_ids[start_index:end_index+1] = np.random.randint(6,vocab_size,size = end_index - start_index + 1)
             elif p <=0.9:
@@ -293,8 +314,11 @@ for doc in data.decode().split('\n\n'):
     for sub_doc in split_doc(doc):
         if not sub_doc.strip():
             continue
-        flat_data.append(sub_doc)
+        if too_many_repeat(sub_doc):
+            continue
 
+        flat_data.append(sub_doc)
+print(len(flat_data))
 t1 = time.time()
 
 print('split, %.4f'%(t1-t0))
@@ -313,7 +337,7 @@ encoded = tokenizer.encode_batch(data)
 vocab_size = tokenizer._tokenizer.get_vocab_size()
 t1 = time.time()
 print(f"finish tokenizing file {blob.name}, %.4f"%(t1-t0))
-
+print(len(encoded))
 
 t0 = time.time()
 
@@ -364,9 +388,9 @@ _fn = slugify(fn)
 
 
 t0 = time.time()
-upload_data_to_gcs(b''.join(buffer_ids),"masked_data/data_original_%s"%_fn)
-upload_data_to_gcs(b''.join(buffer_masked_ids),"masked_data/data_masked_%s"%_fn)
-upload_data_to_gcs(b''.join(buffer_labels),"masked_data/data_labels_%s"%_fn)
+upload_data_to_gcs(b''.join(buffer_ids),"masked_data2/data_original_%s"%_fn)
+upload_data_to_gcs(b''.join(buffer_masked_ids),"masked_data2/data_masked_%s"%_fn)
+upload_data_to_gcs(b''.join(buffer_labels),"masked_data2/data_labels_%s"%_fn)
 
 
 t1 = time.time()
